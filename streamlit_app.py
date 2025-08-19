@@ -42,5 +42,3 @@ if st.button("SVOを抽出"):
             st.warning("SVO構造が見つかりませんでした。")
     else:
         st.warning("英文を入力してください。")
-
-
