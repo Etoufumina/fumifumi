@@ -1,6 +1,6 @@
 import streamlit as st
 import  streamlit as st
-import spacy # type: ignore
+import spacy # pyright: ignore[reportMissingImports]
 
 # spaCyの英語モデルを読み込む
 nlp = spacy.load("en_core_web_sm")
