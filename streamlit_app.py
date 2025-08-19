@@ -1,5 +1,5 @@
 import streamlit as st
-import import streamlit as st
+import  streamlit as st
 import spacy # type: ignore
 
 # spaCyの英語モデルを読み込む
