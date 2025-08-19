@@ -1,5 +1,4 @@
 import streamlit as st
-import  streamlit as st
 import spacy # pyright: ignore[reportMissingImports]
 
 # spaCyの英語モデルを読み込む
