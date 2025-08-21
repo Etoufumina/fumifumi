@@ -1,5 +1,13 @@
 import streamlit as st
 import spacy
+
+nlp = spacy.load("en_core_web_sm")  # モデル名を文字列で指定
+
+doc = nlp("Apple is looking at buying U.K. startup for $1 billion")
+
+for ent in doc.ents:
+    print(ent.text, ent.label_)
+
 # Streamlit Share用のモデル読み込み
 @st.cache_resource
 def load_spacy_model():
