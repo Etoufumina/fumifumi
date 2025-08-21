@@ -1,12 +1,30 @@
 import streamlit as st
 import spacy
+import subprocess
+import importlib
 
-nlp = spacy.load("en_core_web_sm")  # モデル名を文字列で指定
+# モデル読み込み（なければダウンロード）
+@st.cache_resource
+def load_spacy_model():
+    try:
+        return spacy.load("en_core_web_sm")
+    except OSError:
+        st.warning("spaCy モデルが見つかりません。ダウンロード中です...")
+        subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
+        importlib.invalidate_caches()
+        return spacy.load("en_core_web_sm")
 
+nlp = load_spacy_model()
+
+# テスト文章
 doc = nlp("Apple is looking at buying U.K. startup for $1 billion")
 
-for ent in doc.ents:
-    print(ent.text, ent.label_)
+# Streamlit 表示
+st.title("spaCy NLP Demo")
+st.write("解析結果:")
+
+for token in doc:
+    st.write(f"{token.text} → {token.pos_}")
 
 # Streamlit Share用のモデル読み込み
 @st.cache_resource
