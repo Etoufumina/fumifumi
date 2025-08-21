@@ -1,7 +1,15 @@
 import streamlit as st
 import spacy
-import en_core_web_sm  # 直接インポート
+def load_model():
+    try:
+       nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        st.error("spaCyのモデルが読み込めませんでした。`python -m spacy downroad
+        en_core_web_sm` を実行してください。")
+                st.stop()
+           return nlp  
 
+        nlp = load_mode()    
 # Streamlit Share用のモデル読み込み
 @st.cache_resource
 def load_spacy_model():
