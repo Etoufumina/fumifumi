@@ -173,8 +173,42 @@ p, div, label, span {
     letter-spacing: 1px;
 }
 
-/* セパレーター */
-hr { border-color: #333366 !important; }
+/* タイトル画面 */
+.title-screen {
+    text-align: center;
+    padding: 2rem 0;
+}
+.title-logo {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 1.1rem;
+    color: #ffe066;
+    text-shadow: 4px 4px 0px #b8860b, 0 0 30px #ffe06699;
+    line-height: 2.2;
+    margin-bottom: 2rem;
+}
+.diff-card {
+    background: #111128;
+    border: 3px solid #333366;
+    box-shadow: 4px 4px 0 #111144;
+    padding: 1.2rem 1.5rem;
+    margin: 0.5rem 0;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+.diff-card-easy   { border-left: 6px solid #00ff88; }
+.diff-card-medium { border-left: 6px solid #ffcc00; }
+.diff-card-hard   { border-left: 6px solid #ff4466; }
+.diff-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.65rem;
+    margin-bottom: 0.3rem;
+}
+.diff-desc {
+    font-family: 'VT323', monospace;
+    font-size: 1.2rem;
+    color: #aaaacc;
+}
+
 
 /* サイドバー非表示 */
 [data-testid="stSidebar"] { display: none; }
@@ -229,6 +263,7 @@ hard_questions = [
 # =========================
 
 for key, val in [
+    ("game_started", False), ("selected_difficulty", None),
     ("level", 1), ("exp", 0), ("current_question", None),
     ("question_number", 1), ("answered", False),
     ("used_easy", []), ("used_medium", []), ("used_hard", []),
@@ -266,10 +301,10 @@ def add_exp(amount):
             st.session_state.diff_up_msg = True
 
 def get_next_question():
-    level = st.session_state.level
-    if level < 5:
+    diff = st.session_state.selected_difficulty
+    if diff == "easy":
         pool, used_key = easy_questions, "used_easy"
-    elif level < 10:
+    elif diff == "medium":
         pool, used_key = medium_questions, "used_medium"
     else:
         pool, used_key = hard_questions, "used_hard"
@@ -290,10 +325,8 @@ def get_next_question():
     return question
 
 # 初回問題生成
-if st.session_state.current_question is None:
+if st.session_state.game_started and st.session_state.current_question is None:
     st.session_state.current_question = get_next_question()
-
-question = st.session_state.current_question
 
 # =========================
 # UI描画
@@ -301,64 +334,120 @@ question = st.session_state.current_question
 
 st.title("⚔️ 英語クイズRPG ⚔️")
 
-# レベル・EXP表示
-level = st.session_state.level
-diff = get_difficulty(level)
-diff_label = {"easy": "やさしい", "medium": "ふつう", "hard": "むずかしい"}[diff]
-diff_class = {"easy": "badge-easy", "medium": "badge-medium", "hard": "badge-hard"}[diff]
-diff_next = {"easy": "Lv.5 でふつうに上がる", "medium": "Lv.10 でむずかしいに上がる", "hard": "MAX難易度！"}[diff]
+# -----------------------------------------------
+# タイトル画面（難易度選択）
+# -----------------------------------------------
+if not st.session_state.game_started:
 
-st.markdown(
-    f'## Lv.{level}　<span class="badge {diff_class}">{diff_label}</span>',
-    unsafe_allow_html=True
-)
-st.markdown(f'<span style="font-size:1rem; color:#666699;">▸ 次の難易度：{diff_next}</span>', unsafe_allow_html=True)
-
-# 難易度アップ通知
-if st.session_state.diff_up_msg:
-    label = {"medium": "ふつう", "hard": "むずかしい"}.get(diff, diff_label)
+    st.markdown('<div class="title-screen">', unsafe_allow_html=True)
     st.markdown(
-        f'<div class="diff-up">⚠ 難易度が「{label}」に上がった！</div>',
+        '<div class="title-logo">ENGLISH<br>QUEST</div>',
         unsafe_allow_html=True
     )
-    st.session_state.diff_up_msg = False
+    st.markdown("### 難易度を選んでください", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-exp_ratio = st.session_state.exp / required_exp(level)
-st.progress(exp_ratio)
-st.markdown(f"EXP：{st.session_state.exp} / {required_exp(level)}")
+    col1, col2, col3 = st.columns(3)
 
-st.markdown("---")
+    with col1:
+        st.markdown(
+            '<div class="diff-card diff-card-easy">'
+            '<div class="diff-title" style="color:#00ff88">🟢 やさしい</div>'
+            '<div class="diff-desc">基本的な文法<br>中学レベル<br>+10 EXP/問</div>'
+            '</div>',
+            unsafe_allow_html=True
+        )
+        if st.button("やさしい でスタート"):
+            st.session_state.selected_difficulty = "easy"
+            st.session_state.game_started = True
+            st.rerun()
 
-# 問題文
-st.markdown(f"### 問題 {st.session_state.question_number}")
-st.markdown(
-    f'<div class="question-box">{question["text"]}</div>',
-    unsafe_allow_html=True
-)
+    with col2:
+        st.markdown(
+            '<div class="diff-card diff-card-medium">'
+            '<div class="diff-title" style="color:#ffcc00">🟡 ふつう</div>'
+            '<div class="diff-desc">仮定法・受動態<br>高校レベル<br>+25 EXP/問</div>'
+            '</div>',
+            unsafe_allow_html=True
+        )
+        if st.button("ふつう でスタート"):
+            st.session_state.selected_difficulty = "medium"
+            st.session_state.game_started = True
+            st.rerun()
 
-# 選択肢
-selected = st.radio(
-    "こたえを選んでください",
-    question["choices"],
-    key=f"radio_{st.session_state.question_number}"
-)
+    with col3:
+        st.markdown(
+            '<div class="diff-card diff-card-hard">'
+            '<div class="diff-title" style="color:#ff4466">🔴 むずかしい</div>'
+            '<div class="diff-desc">倒置・高度な構文<br>大学入試レベル<br>+50 EXP/問</div>'
+            '</div>',
+            unsafe_allow_html=True
+        )
+        if st.button("むずかしい でスタート"):
+            st.session_state.selected_difficulty = "hard"
+            st.session_state.game_started = True
+            st.rerun()
 
-st.markdown("")
+# -----------------------------------------------
+# ゲーム画面
+# -----------------------------------------------
+else:
+    question = st.session_state.current_question
+    level = st.session_state.level
+    diff = st.session_state.selected_difficulty
+    diff_label = {"easy": "やさしい", "medium": "ふつう", "hard": "むずかしい"}[diff]
+    diff_class = {"easy": "badge-easy", "medium": "badge-medium", "hard": "badge-hard"}[diff]
 
-col1, col2 = st.columns([1, 1])
+    st.markdown(
+        f'## Lv.{level}　<span class="badge {diff_class}">{diff_label}</span>',
+        unsafe_allow_html=True
+    )
 
-with col1:
-    if st.button("⚔️ 回答する", disabled=st.session_state.answered):
-        st.session_state.answered = True
-        if selected == question["answer"]:
-            st.success(f"✔ せいかい！　+{question['exp']} EXP　獲得！")
-            add_exp(question["exp"])
-        else:
-            st.error(f"✘ ちがう！　正解は「{question['answer']}」だった！")
+    exp_ratio = st.session_state.exp / required_exp(level)
+    st.progress(exp_ratio)
+    st.markdown(f"EXP：{st.session_state.exp} / {required_exp(level)}")
 
-with col2:
-    if st.button("▶ 次の問題へ"):
-        st.session_state.current_question = get_next_question()
-        st.session_state.question_number += 1
-        st.session_state.answered = False
-        st.rerun()
+    st.markdown("---")
+
+    st.markdown(f"### 問題 {st.session_state.question_number}")
+    st.markdown(
+        f'<div class="question-box">{question["text"]}</div>',
+        unsafe_allow_html=True
+    )
+
+    selected = st.radio(
+        "こたえを選んでください",
+        question["choices"],
+        key=f"radio_{st.session_state.question_number}"
+    )
+
+    st.markdown("")
+
+    # 難易度ごとのEXP（問題データのexpより優先）
+    diff_exp = {"easy": 10, "medium": 25, "hard": 50}[diff]
+
+    col1, col2 = st.columns([3, 1])
+
+    with col1:
+        if st.button("⚔️ 回答する", disabled=st.session_state.answered):
+            if selected == question["answer"]:
+                add_exp(diff_exp)
+                st.success(f"✔ せいかい！　+{diff_exp} EXP　獲得！")
+            else:
+                st.error(f"✘ ちがう！　正解は「{question['answer']}」だった！")
+            # 正解・不正解どちらもすぐ次の問題へ
+            import time
+            time.sleep(1.2)
+            st.session_state.current_question = get_next_question()
+            st.session_state.question_number += 1
+            st.session_state.answered = False
+            st.rerun()
+
+    with col2:
+        if st.button("🏠 タイトルへ"):
+            for key in ["game_started", "selected_difficulty", "level", "exp",
+                        "current_question", "question_number", "answered",
+                        "used_easy", "used_medium", "used_hard",
+                        "prev_difficulty", "diff_up_msg"]:
+                del st.session_state[key]
+            st.rerun()
