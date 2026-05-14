@@ -1,12 +1,12 @@
 import streamlit as st
 import random
-from openai import OpenAI   # ← ここを修正（1行だけ）
+import anthropic
 
 # =========================
-# OpenAI APIキー
+# Anthropic APIキー
 # =========================
-client = OpenAI(
-    api_key="YOUR_API_KEY"
+client = anthropic.Anthropic(
+    api_key="YOUR_API_KEY"  # ← AnthropicのAPIキーを入力
 )
 
 # =========================
@@ -147,14 +147,15 @@ D. ...
 Answer: ...
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=512,
         messages=[
             {"role": "user", "content": prompt}
         ]
     )
 
-    return response.choices[0].message.content
+    return response.content[0].text
 
 # =========================
 # 初回問題生成
