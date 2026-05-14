@@ -1,7 +1,6 @@
 import streamlit as st
 import random
-from openai import OpenAI
-
+    from openai import OpenAI  # これ1行だけでOK
 # =========================
 # OpenAI APIキー
 # =========================
