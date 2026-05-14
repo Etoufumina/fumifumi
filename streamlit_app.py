@@ -1,12 +1,10 @@
 import streamlit as st
 import random
-    from openai import OpenAI  # これ1行だけでOK
+from openai import OpenAI   # ← ここを修正（1行だけ）
+
 # =========================
 # OpenAI APIキー
 # =========================
-# Streamlit Cloudなら secrets.toml 推奨
-# ローカルなら直接入力でもOK
-
 client = OpenAI(
     api_key="YOUR_API_KEY"
 )
@@ -26,6 +24,9 @@ if "current_question" not in st.session_state:
 
 if "question_number" not in st.session_state:
     st.session_state.question_number = 1
+
+if "answered" not in st.session_state:
+    st.session_state.answered = False
 
 # =========================
 # 問題データ
@@ -101,15 +102,12 @@ def add_exp(amount):
 # =========================
 
 def get_question_pool():
-
     level = st.session_state.level
 
     if level < 5:
         return easy_questions
-
     elif level < 10:
         return medium_questions
-
     else:
         return hard_questions
 
@@ -126,15 +124,10 @@ def generate_random_question():
 # =========================
 
 def generate_ai_question(level):
-
-    difficulty = ""
-
     if level < 5:
         difficulty = "easy high school English"
-
     elif level < 10:
         difficulty = "medium high school English"
-
     else:
         difficulty = "advanced English grammar"
 
@@ -155,7 +148,7 @@ Answer: ...
 """
 
     response = client.chat.completions.create(
-        model="gpt-4.1-mini",
+        model="gpt-4o-mini",
         messages=[
             {"role": "user", "content": prompt}
         ]
@@ -180,11 +173,7 @@ st.title("🎮 英語クイズRPG")
 
 st.write(f"## Lv.{st.session_state.level}")
 
-exp_ratio = (
-    st.session_state.exp /
-    required_exp(st.session_state.level)
-)
-
+exp_ratio = st.session_state.exp / required_exp(st.session_state.level)
 st.progress(exp_ratio)
 
 st.write(
@@ -193,44 +182,36 @@ st.write(
 )
 
 st.write(f"### 問題 {st.session_state.question_number}")
-
 st.write(question["text"])
 
 selected = st.radio(
     "選択してください",
     question["choices"],
-    key=st.session_state.question_number
+    key=f"radio_{st.session_state.question_number}"  # ← キー名を明示的に変更
 )
 
 # =========================
 # 回答ボタン
 # =========================
 
-if st.button("回答する"):
+if st.button("回答する", disabled=st.session_state.answered):
+
+    st.session_state.answered = True
 
     if selected == question["answer"]:
-
-        st.success(
-            f"正解！ +{question['exp']} EXP"
-        )
-
+        st.success(f"正解！ +{question['exp']} EXP")
         add_exp(question["exp"])
-
     else:
-        st.error(
-            f"不正解！ 正解: {question['answer']}"
-        )
+        st.error(f"不正解！ 正解: {question['answer']}")
 
 # =========================
 # 次の問題
 # =========================
 
 if st.button("次の問題へ"):
-
     st.session_state.current_question = generate_random_question()
-
     st.session_state.question_number += 1
-
+    st.session_state.answered = False   # ← 回答済みフラグをリセット
     st.rerun()
 
 # =========================
@@ -238,15 +219,9 @@ if st.button("次の問題へ"):
 # =========================
 
 st.divider()
-
 st.subheader("🤖 AI問題生成")
 
 if st.button("AIで問題を作る"):
-
     with st.spinner("AIが問題作成中..."):
-
-        ai_question = generate_ai_question(
-            st.session_state.level
-        )
-
+        ai_question = generate_ai_question(st.session_state.level)
     st.write(ai_question)
