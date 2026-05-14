@@ -144,7 +144,36 @@ p, div, label, span {
     color: #ff4444 !important;
 }
 
-/* セパレーター非表示 */
+/* 難易度バッジ */
+.badge {
+    display: inline-block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.55rem;
+    padding: 0.35rem 0.8rem;
+    border: 2px solid;
+    letter-spacing: 1px;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+.badge-easy   { color: #00ff88; border-color: #00ff88; background: #001a0d; box-shadow: 2px 2px 0 #00aa44; }
+.badge-medium { color: #ffcc00; border-color: #ffcc00; background: #1a1000; box-shadow: 2px 2px 0 #aa8800; }
+.badge-hard   { color: #ff4466; border-color: #ff4466; background: #1a0008; box-shadow: 2px 2px 0 #aa0022; }
+
+/* 難易度アップ通知 */
+.diff-up {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.6rem;
+    color: #ff4466;
+    background: #1a0008;
+    border: 2px solid #ff4466;
+    box-shadow: 3px 3px 0 #aa0022;
+    padding: 0.7rem 1rem;
+    margin: 0.5rem 0;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+/* セパレーター */
 hr { border-color: #333366 !important; }
 
 /* サイドバー非表示 */
@@ -202,7 +231,8 @@ hard_questions = [
 for key, val in [
     ("level", 1), ("exp", 0), ("current_question", None),
     ("question_number", 1), ("answered", False),
-    ("used_easy", []), ("used_medium", []), ("used_hard", [])
+    ("used_easy", []), ("used_medium", []), ("used_hard", []),
+    ("prev_difficulty", "easy"), ("diff_up_msg", False)
 ]:
     if key not in st.session_state:
         st.session_state[key] = val
@@ -214,6 +244,14 @@ for key, val in [
 def required_exp(level):
     return level * 100
 
+def get_difficulty(level):
+    if level < 5:
+        return "easy"
+    elif level < 10:
+        return "medium"
+    else:
+        return "hard"
+
 def add_exp(amount):
     st.session_state.exp += amount
     while st.session_state.exp >= required_exp(st.session_state.level):
@@ -221,6 +259,11 @@ def add_exp(amount):
         st.session_state.level += 1
         st.balloons()
         st.success(f"★ LEVEL UP！ Lv.{st.session_state.level} に上がった！")
+        # 難易度が変わったか確認
+        new_diff = get_difficulty(st.session_state.level)
+        if new_diff != st.session_state.prev_difficulty:
+            st.session_state.prev_difficulty = new_diff
+            st.session_state.diff_up_msg = True
 
 def get_next_question():
     level = st.session_state.level
@@ -260,8 +303,25 @@ st.title("⚔️ 英語クイズRPG ⚔️")
 
 # レベル・EXP表示
 level = st.session_state.level
-difficulty_label = "やさしい" if level < 5 else ("ふつう" if level < 10 else "むずかしい")
-st.markdown(f"## Lv.{level}　　難易度：{difficulty_label}")
+diff = get_difficulty(level)
+diff_label = {"easy": "やさしい", "medium": "ふつう", "hard": "むずかしい"}[diff]
+diff_class = {"easy": "badge-easy", "medium": "badge-medium", "hard": "badge-hard"}[diff]
+diff_next = {"easy": "Lv.5 でふつうに上がる", "medium": "Lv.10 でむずかしいに上がる", "hard": "MAX難易度！"}[diff]
+
+st.markdown(
+    f'## Lv.{level}　<span class="badge {diff_class}">{diff_label}</span>',
+    unsafe_allow_html=True
+)
+st.markdown(f'<span style="font-size:1rem; color:#666699;">▸ 次の難易度：{diff_next}</span>', unsafe_allow_html=True)
+
+# 難易度アップ通知
+if st.session_state.diff_up_msg:
+    label = {"medium": "ふつう", "hard": "むずかしい"}.get(diff, diff_label)
+    st.markdown(
+        f'<div class="diff-up">⚠ 難易度が「{label}」に上がった！</div>',
+        unsafe_allow_html=True
+    )
+    st.session_state.diff_up_msg = False
 
 exp_ratio = st.session_state.exp / required_exp(level)
 st.progress(exp_ratio)
