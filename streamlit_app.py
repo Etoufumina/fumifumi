@@ -1,13 +1,7 @@
 import streamlit as st
 import random
-import anthropic
-
-# =========================
-# Anthropic APIキー
-# =========================
-client = anthropic.Anthropic(
-    api_key="YOUR_API_KEY"  # ← AnthropicのAPIキーを入力
-)
+import streamlit as st
+import random
 
 # =========================
 # 初期データ
@@ -120,44 +114,6 @@ def generate_random_question():
     return random.choice(questions)
 
 # =========================
-# AI問題生成
-# =========================
-
-def generate_ai_question(level):
-    if level < 5:
-        difficulty = "easy high school English"
-    elif level < 10:
-        difficulty = "medium high school English"
-    else:
-        difficulty = "advanced English grammar"
-
-    prompt = f"""
-Create one 4-choice English quiz.
-
-Difficulty: {difficulty}
-
-Return ONLY in this format:
-
-Question: ...
-Choices:
-A. ...
-B. ...
-C. ...
-D. ...
-Answer: ...
-"""
-
-    response = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=512,
-        messages=[
-            {"role": "user", "content": prompt}
-        ]
-    )
-
-    return response.content[0].text
-
-# =========================
 # 初回問題生成
 # =========================
 
@@ -214,15 +170,3 @@ if st.button("次の問題へ"):
     st.session_state.question_number += 1
     st.session_state.answered = False   # ← 回答済みフラグをリセット
     st.rerun()
-
-# =========================
-# AI問題生成ボタン
-# =========================
-
-st.divider()
-st.subheader("🤖 AI問題生成")
-
-if st.button("AIで問題を作る"):
-    with st.spinner("AIが問題作成中..."):
-        ai_question = generate_ai_question(st.session_state.level)
-    st.write(ai_question)
