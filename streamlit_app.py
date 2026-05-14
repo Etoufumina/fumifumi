@@ -2,6 +2,157 @@ import streamlit as st
 import random
 
 # =========================
+# カスタムCSS（レトロRPGテーマ）
+# =========================
+
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
+
+/* 全体背景 */
+.stApp {
+    background-color: #0d0d1a;
+    background-image:
+        radial-gradient(ellipse at 20% 50%, #1a0a2e 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, #0a1a2e 0%, transparent 60%);
+}
+
+/* メインコンテンツ幅 */
+.block-container {
+    max-width: 720px !important;
+    padding: 2rem 2rem !important;
+}
+
+/* タイトル */
+h1 {
+    font-family: 'Press Start 2P', monospace !important;
+    color: #ffe066 !important;
+    font-size: 1.2rem !important;
+    text-shadow: 3px 3px 0px #b8860b, 0 0 20px #ffe06688 !important;
+    text-align: center !important;
+    letter-spacing: 2px !important;
+    margin-bottom: 1.5rem !important;
+}
+
+/* h2 / h3 */
+h2, h3 {
+    font-family: 'Press Start 2P', monospace !important;
+    color: #7ecfff !important;
+    font-size: 0.75rem !important;
+    text-shadow: 2px 2px 0px #0066aa !important;
+}
+
+/* 通常テキスト */
+p, div, label, span {
+    font-family: 'VT323', monospace !important;
+    color: #e8e8d0 !important;
+    font-size: 1.3rem !important;
+}
+
+/* 問題文カード */
+.question-box {
+    background: #111128;
+    border: 3px solid #4444aa;
+    border-image: none;
+    box-shadow: 4px 4px 0px #2222aa, inset 0 0 30px #00001a;
+    padding: 1.5rem 2rem;
+    margin: 1rem 0 1.5rem 0;
+    font-family: 'VT323', monospace;
+    font-size: 1.6rem;
+    color: #ffffff;
+    line-height: 1.8;
+    position: relative;
+}
+.question-box::before {
+    content: '▶ ';
+    color: #ffe066;
+}
+
+/* EXPバー */
+.stProgress > div > div > div > div {
+    background: linear-gradient(90deg, #00ff88, #00ccff) !important;
+    box-shadow: 0 0 8px #00ff8888 !important;
+}
+.stProgress > div > div > div {
+    background: #222244 !important;
+    border: 2px solid #4444aa !important;
+}
+
+/* ラジオボタン */
+.stRadio > div {
+    background: #111128 !important;
+    border: 2px solid #333366 !important;
+    border-radius: 0 !important;
+    padding: 0.8rem 1rem !important;
+    margin: 0.3rem 0 !important;
+    transition: border-color 0.15s, background 0.15s !important;
+}
+.stRadio > div:hover {
+    border-color: #7777ff !important;
+    background: #1a1a3a !important;
+}
+.stRadio label {
+    font-family: 'VT323', monospace !important;
+    font-size: 1.4rem !important;
+    color: #ccccff !important;
+    cursor: pointer !important;
+}
+
+/* ボタン */
+.stButton > button {
+    font-family: 'Press Start 2P', monospace !important;
+    font-size: 0.6rem !important;
+    background: #1a1a3a !important;
+    color: #ffe066 !important;
+    border: 3px solid #ffe066 !important;
+    border-radius: 0 !important;
+    padding: 0.6rem 1.2rem !important;
+    box-shadow: 4px 4px 0px #b8860b !important;
+    transition: all 0.1s !important;
+    letter-spacing: 1px !important;
+}
+.stButton > button:hover:not(:disabled) {
+    background: #ffe066 !important;
+    color: #0d0d1a !important;
+    transform: translate(-2px, -2px) !important;
+    box-shadow: 6px 6px 0px #b8860b !important;
+}
+.stButton > button:active:not(:disabled) {
+    transform: translate(2px, 2px) !important;
+    box-shadow: 2px 2px 0px #b8860b !important;
+}
+.stButton > button:disabled {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+}
+
+/* 正解・不正解メッセージ */
+.stSuccess, .stError {
+    font-family: 'VT323', monospace !important;
+    font-size: 1.4rem !important;
+    border-radius: 0 !important;
+    border-left: 4px solid !important;
+}
+.stSuccess {
+    background: #001a00 !important;
+    border-color: #00ff88 !important;
+    color: #00ff88 !important;
+}
+.stError {
+    background: #1a0000 !important;
+    border-color: #ff4444 !important;
+    color: #ff4444 !important;
+}
+
+/* セパレーター非表示 */
+hr { border-color: #333366 !important; }
+
+/* サイドバー非表示 */
+[data-testid="stSidebar"] { display: none; }
+</style>
+""", unsafe_allow_html=True)
+
+# =========================
 # 問題データ（各難易度10問）
 # =========================
 
@@ -48,40 +199,20 @@ hard_questions = [
 # 初期データ
 # =========================
 
-if "level" not in st.session_state:
-    st.session_state.level = 1
-
-if "exp" not in st.session_state:
-    st.session_state.exp = 0
-
-if "current_question" not in st.session_state:
-    st.session_state.current_question = None
-
-if "question_number" not in st.session_state:
-    st.session_state.question_number = 1
-
-if "answered" not in st.session_state:
-    st.session_state.answered = False
-
-if "used_easy" not in st.session_state:
-    st.session_state.used_easy = []
-
-if "used_medium" not in st.session_state:
-    st.session_state.used_medium = []
-
-if "used_hard" not in st.session_state:
-    st.session_state.used_hard = []
+for key, val in [
+    ("level", 1), ("exp", 0), ("current_question", None),
+    ("question_number", 1), ("answered", False),
+    ("used_easy", []), ("used_medium", []), ("used_hard", [])
+]:
+    if key not in st.session_state:
+        st.session_state[key] = val
 
 # =========================
-# 必要経験値
+# ロジック関数
 # =========================
 
 def required_exp(level):
     return level * 100
-
-# =========================
-# レベルアップ
-# =========================
 
 def add_exp(amount):
     st.session_state.exp += amount
@@ -89,28 +220,18 @@ def add_exp(amount):
         st.session_state.exp -= required_exp(st.session_state.level)
         st.session_state.level += 1
         st.balloons()
-        st.success(f"🎉 レベルアップ！ Lv.{st.session_state.level}")
-
-# =========================
-# レベル別問題取得（重複なし・選択肢シャッフル）
-# =========================
+        st.success(f"★ LEVEL UP！ Lv.{st.session_state.level} に上がった！")
 
 def get_next_question():
     level = st.session_state.level
-
     if level < 5:
-        pool = easy_questions
-        used_key = "used_easy"
+        pool, used_key = easy_questions, "used_easy"
     elif level < 10:
-        pool = medium_questions
-        used_key = "used_medium"
+        pool, used_key = medium_questions, "used_medium"
     else:
-        pool = hard_questions
-        used_key = "used_hard"
+        pool, used_key = hard_questions, "used_hard"
 
     used = st.session_state[used_key]
-
-    # 全問出題済みならリセット
     remaining = [i for i in range(len(pool)) if i not in used]
     if not remaining:
         st.session_state[used_key] = []
@@ -120,66 +241,64 @@ def get_next_question():
     st.session_state[used_key].append(idx)
 
     question = pool[idx].copy()
-
-    # 選択肢をシャッフル
     choices = question["choices"][:]
     random.shuffle(choices)
     question["choices"] = choices
-
     return question
 
-# =========================
 # 初回問題生成
-# =========================
-
 if st.session_state.current_question is None:
     st.session_state.current_question = get_next_question()
 
 question = st.session_state.current_question
 
 # =========================
-# UI
+# UI描画
 # =========================
 
-st.title("🎮 英語クイズRPG")
+st.title("⚔️ 英語クイズRPG ⚔️")
 
-st.write(f"## Lv.{st.session_state.level}")
+# レベル・EXP表示
+level = st.session_state.level
+difficulty_label = "やさしい" if level < 5 else ("ふつう" if level < 10 else "むずかしい")
+st.markdown(f"## Lv.{level}　　難易度：{difficulty_label}")
 
-exp_ratio = st.session_state.exp / required_exp(st.session_state.level)
+exp_ratio = st.session_state.exp / required_exp(level)
 st.progress(exp_ratio)
+st.markdown(f"EXP：{st.session_state.exp} / {required_exp(level)}")
 
-st.write(
-    f"EXP: {st.session_state.exp} / "
-    f"{required_exp(st.session_state.level)}"
+st.markdown("---")
+
+# 問題文
+st.markdown(f"### 問題 {st.session_state.question_number}")
+st.markdown(
+    f'<div class="question-box">{question["text"]}</div>',
+    unsafe_allow_html=True
 )
 
-st.write(f"### 問題 {st.session_state.question_number}")
-st.write(question["text"])
-
+# 選択肢
 selected = st.radio(
-    "選択してください",
+    "こたえを選んでください",
     question["choices"],
     key=f"radio_{st.session_state.question_number}"
 )
 
-# =========================
-# 回答ボタン
-# =========================
+st.markdown("")
 
-if st.button("回答する", disabled=st.session_state.answered):
-    st.session_state.answered = True
-    if selected == question["answer"]:
-        st.success(f"正解！ +{question['exp']} EXP")
-        add_exp(question["exp"])
-    else:
-        st.error(f"不正解！ 正解: {question['answer']}")
+col1, col2 = st.columns([1, 1])
 
-# =========================
-# 次の問題
-# =========================
+with col1:
+    if st.button("⚔️ 回答する", disabled=st.session_state.answered):
+        st.session_state.answered = True
+        if selected == question["answer"]:
+            st.success(f"✔ せいかい！　+{question['exp']} EXP　獲得！")
+            add_exp(question["exp"])
+        else:
+            st.error(f"✘ ちがう！　正解は「{question['answer']}」だった！")
 
-if st.button("次の問題へ"):
-    st.session_state.current_question = get_next_question()
-    st.session_state.question_number += 1
-    st.session_state.answered = False
-    st.rerun()
+with col2:
+    if st.button("▶ 次の問題へ"):
+        st.session_state.current_question = get_next_question()
+        st.session_state.question_number += 1
+        st.session_state.answered = False
+        st.rerun()
